@@ -2,23 +2,72 @@ div {
   text-align: center;
   margin-top: 50px;
 }
+
 h1 {
   font-size: 2.5rem;
   color: #4caf50;
 }
-p {
-  font-size: 1.2rem;
-  color: #555;
+
+h2 {
+  color: #333;
 }
+
 ul {
   list-style-type: none;
   padding: 0;
+  max-width: 500px;
+  margin: 20px auto;
 }
+
 li {
   background: #f0f0f0;
-  margin: 5px 0;
-  padding: 10px;
+  margin: 10px 0;
+  padding: 10px 20px;
   border-radius: 5px;
   font-size: 1.2rem;
   color: #333;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+li.concluida {
+  text-decoration: line-through;
+  background-color: #d4edda;
+  color: #155724;
+}
+
+li div button {
+  margin-left: 10px;
+  padding: 5px 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  background-color: #007bff;
+  color: white;
+}
+
+li div button.remover {
+    background-color: #dc3545;
+}
+
+.add-tarefa {
+    margin-top: 20px;
+}
+
+.add-tarefa input {
+    padding: 10px;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    margin-right: 10px;
+}
+
+.add-tarefa button {
+    padding: 10px 20px;
+    border: none;
+    background-color: #28a745;
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
 }

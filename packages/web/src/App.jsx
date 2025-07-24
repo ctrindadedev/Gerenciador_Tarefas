@@ -1,131 +1,107 @@
-import Tarefa from "./components/Tarefa";
-import Titulo from "./components/Titulo";
 import { useState, useEffect } from "react";
+import axios from "axios";
+import "./App.css";
+
+const API_URL = "http://localhost:3000/tarefas";
 
 function App() {
-  const [tarefas, setTarefas] = useState([
-    {
-      id: 1,
-      nome: "Estudar React",
-      concluida: false,
-      favorita: false,
-      filtro: "nao-concluidas",
-    },
-    {
-      id: 2,
-      nome: "Fazer exercícios",
-      concluida: false,
-      favorita: false,
-      filtro: "nao-concluidas",
-    },
-    {
-      id: 3,
-      nome: "Ler um livro",
-      concluida: false,
-      favorita: false,
-      filtro: "nao-concluidas",
-    },
-  ]);
-  const [filtro, setFiltro] = useState("todos");
-
-  const tarefasFiltradas = tarefas.filter((tarefa) => {
-    if (filtro === "concluidas") return tarefa.concluida;
-    if (filtro === "nao-concluidas") return !tarefa.concluida;
-    if (filtro === "favoritas") return tarefa.favorita;
-    return true; // todas
-  });
-
-  //estamos atualizando o estado das tarefas, adicionando uma nova tarefa ao array existente -> '...'Spread operador para copiar o array de tarefas e garantir que as tarefas não serão perdidas
-
+  const [tarefas, setTarefas] = useState([]);
   const [novaTarefa, setNovaTarefa] = useState("");
-  const adicionarTarefa = () => {
-    const nova = {
-      id: tarefas.length + 1,
-      nome: novaTarefa,
-      concluida: false,
-      favorita: false,
-      filtro: "nao-concluidas",
-    };
-    setTarefas([...tarefas, nova]);
-    alert(`Tarefa "${nova.nome}" adicionada com sucesso!`);
-    setNovaTarefa("");
+
+  // Função para buscar as tarefas da API
+  const buscarTarefas = async () => {
+    try {
+      const response = await axios.get(API_URL);
+      setTarefas(response.data);
+    } catch (error) {
+      console.error("Erro ao buscar tarefas:", error);
+    }
   };
 
-  const removerTarefa = (id) => {
-    const novasTarefas = tarefas.filter((tarefa) => tarefa.id !== id);
-    setTarefas(novasTarefas);
-  };
-
-  const editarTarefa = (id, novoNome) => {
-    const tarefasAtualizada = tarefas.map((tarefa) =>
-      tarefa.id === id ? { ...tarefa, nome: novoNome } : tarefa
-    );
-    setTarefas(tarefasAtualizada);
-  };
-
-  const favoritarTarefa = (id) => {
-    const tarefasFavoritadas = tarefas.map((tarefa) =>
-      tarefa.id === id ? { ...tarefa, favorita: !tarefa.favorita } : tarefa
-    );
-    setTarefas(tarefasFavoritadas);
-  };
-
-  //Usando hook para alterar o compente caso ele seja marcado como concluido
-
-  const concluirTarefa = (id) => {
-    const tarefasAtualizadas = tarefas.map((tarefa) =>
-      tarefa.id === id ? { ...tarefa, concluida: !tarefa.concluida } : tarefa
-    );
-    setTarefas(tarefasAtualizadas);
-  };
-
+  // useEffect para buscar as tarefas quando o componente montar
   useEffect(() => {
-    console.log("Componente montado ou atualizado!");
-  }, [tarefas]);
+    buscarTarefas();
+  }, []);
+
+  const adicionarTarefa = async () => {
+    if (novaTarefa.trim() === "") {
+      alert("O título da tarefa não pode ser vazio.");
+      return;
+    }
+    try {
+      const response = await axios.post(API_URL, {
+        titulo: novaTarefa,
+        concluida: false,
+      });
+      setTarefas([...tarefas, response.data]);
+      setNovaTarefa("");
+      alert(`Tarefa "${response.data.titulo}" adicionada com sucesso!`);
+    } catch (error) {
+      console.error("Erro ao adicionar tarefa:", error);
+      alert("Falha ao adicionar a tarefa.");
+    }
+  };
+
+  const removerTarefa = async (id) => {
+    try {
+      await axios.delete(`${API_URL}/${id}`);
+      setTarefas(tarefas.filter((tarefa) => tarefa.id !== id));
+    } catch (error) {
+      console.error("Erro ao remover tarefa:", error);
+      alert("Falha ao remover a tarefa.");
+    }
+  };
+
+  const concluirTarefa = async (tarefa) => {
+    try {
+      const tarefaAtualizada = {
+        ...tarefa,
+        concluida: !tarefa.concluida,
+      };
+      await axios.put(`${API_URL}/${tarefa.id}`, tarefaAtualizada);
+      setTarefas(
+        tarefas.map((t) => (t.id === tarefa.id ? tarefaAtualizada : t))
+      );
+    } catch (error) {
+      console.error("Erro ao concluir tarefa:", error);
+      alert("Falha ao atualizar a tarefa.");
+    }
+  };
 
   return (
     <div>
       <h1>Gerenciador de Tarefas 📝</h1>
-      <Titulo texto={"Lista de Tarefas"} />
-
-      <div style={{ marginBottom: "1rem" }}>
-        <strong>Filtro: </strong>
-        <button onClick={() => setFiltro("todas")}>Todas</button>
-        <button onClick={() => setFiltro("favoritas")}>Favoritas</button>
-        <button onClick={() => setFiltro("concluidas")}>Concluídas</button>
-        <button onClick={() => setFiltro("nao-concluidas")}>
-          Não concluídas
-        </button>
-      </div>
+      <h2>Lista de Tarefas</h2>
 
       <ul>
-        {tarefasFiltradas.map((tarefa) => (
-          <li
-            key={tarefa.id}
-            style={{
-              textDecoration: tarefa.concluida ? "line-through" : "none",
-              color: tarefa.favorita ? "yellow" : "none",
-            }}
-          >
-            <Tarefa
-              nome={tarefa.nome}
-              onConcluir={() => concluirTarefa(tarefa.id)}
-              onFavorit={() => favoritarTarefa(tarefa.id)}
-              onEdit={(e) => editarTarefa(tarefa.id, e.target.value)}
-            />
-            <button onClick={() => removerTarefa(tarefa.id)}>Remover</button>
+        {tarefas.map((tarefa) => (
+          <li key={tarefa.id} className={tarefa.concluida ? "concluida" : ""}>
+            <span>{tarefa.titulo}</span>
+            <div>
+              <button onClick={() => concluirTarefa(tarefa)}>
+                {tarefa.concluida ? "Desmarcar" : "Concluir"}
+              </button>
+              <button
+                onClick={() => removerTarefa(tarefa.id)}
+                className="remover"
+              >
+                Remover
+              </button>
+            </div>
           </li>
         ))}
       </ul>
 
-      <input
-        type="text"
-        value={novaTarefa}
-        onChange={(e) => setNovaTarefa(e.target.value)}
-        onKeyDown={(e) => e.key === "Enter" && adicionarTarefa()}
-        placeholder="Adicionar nova tarefa"
-      />
-      <button onClick={adicionarTarefa}>Adicionar</button>
+      <div className="add-tarefa">
+        <input
+          type="text"
+          value={novaTarefa}
+          onChange={(e) => setNovaTarefa(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && adicionarTarefa()}
+          placeholder="Adicionar nova tarefa"
+        />
+        <button onClick={adicionarTarefa}>Adicionar</button>
+      </div>
     </div>
   );
 }
